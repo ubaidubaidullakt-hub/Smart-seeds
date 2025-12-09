@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Smart Seed Analyzer — Robust Camera</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f7f6; --card:#fff; --accent:#1e7f3f; --muted:#475569; --danger:#d9534f;
+  --glass: rgba(255,255,255,0.65);
+}
+[data-theme='dark']{
+  --bg:#071323; --card:#071827; --accent:#38d39f; --muted:#94a3b8; --danger:#ff7b7b; --glass: rgba(20,28,36,0.6);
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial,sans-serif;background:var(--bg);color:var(--muted)}
+.container{max-width:980px;margin:14px auto;padding:14px}
+.header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.brand{display:flex;gap:12px;align-items:center}
+.logo{width:48px;height:48px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#7ad8a0);display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
+.title{font-weight:700;color:var(--accent)}
+.controls{display:flex;gap:8px;align-items:center}
+.card{background:var(--card);border-radius:12px;padding:12px;box-shadow:0 8px 20px rgba(2,6,23,0.06)}
+.grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
+@media(min-width:920px){.grid{grid-template-columns:1fr 420px}}
+.select,input,button{padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);background:transparent;font-size:14px}
+.btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 12px;cursor:pointer}
+.btn.ghost{background:transparent;border:1px dashed rgba(0,0,0,0.06);color:var(--muted)}
+.video-wrap{display:flex;flex-direction:column;gap:8px;align-items:center}
+video{width:100%;height:auto;border-radius:10px;background:black;object-fit:cover}
+.preview-row{display:flex;gap:12px;align-items:center}
+.swatch{width:64px;height:64px;border-radius:8px;border:1px solid rgba(0,0,0,0.06)}
+.metrics{font-size:13px;color:var(--muted)}
+.meter{height:18px;border-radius:12px;background:linear-gradient(180deg,rgba(0,0,0,0.02),transparent);overflow:hidden;border:1px solid rgba(0,0,0,0.03)}
+.meter-fill{height:100%;width:0%;transition:width 900ms ease, background 400ms linear;border-radius:12px}
+.badge{padding:6px 10px;border-radius:999px;font-weight:700}
+.status-low{background:rgba(217,83,79,0.08);color:var(--danger);border:1px solid rgba(217,83,79,0.12)}
+.status-opt{background:rgba(30,127,63,0.08);color:var(--accent);border:1px solid rgba(30,127,63,0.12)}
+.status-high{background:rgba(14,165,233,0.06);color:#0b62a3;border:1px solid rgba(14,165,233,0.12)}
+.small{font-size:12px;color:var(--muted)}
+.loading{display:inline-block;width:18px;height:18px;border-radius:50%;border:3px solid rgba(255,255,255,0.2);border-top-color:var(--accent);animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hint{font-size:12px;color:var(--muted)}
+.center{display:flex;align-items:center;justify-content:center}
+.footer{margin-top:12px;text-align:center;font-size:13px;color:var(--muted)}
+.note{margin-top:8px;font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body data-theme="light">
+<div class="container">
+  <div class="header">
+    <div class="brand">
+      <div class="logo">SS</div>
+      <div>
+        <div class="title">Smart Seed Analyzer</div>
+        <div class="small">Robust camera + moisture analysis</div>
+      </div>
+    </div>
+    <div class="controls">
+      <select id="lang" title="Language">
+        <option value="en">EN</option>
+        <option value="ml">മലയാളം</option>
+      </select>
+      <button id="themeToggle" class="btn btn-ghost">🌗</button>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="seedSelect" class="select">
+            <option value="paddy">Paddy</option>
+            <option value="wheat">Wheat</option>
+            <option value="maize">Maize</option>
+            <option value="custom">Custom...</option>
+          </select>
+          <input id="customName" placeholder="Custom seed name" style="display:none" />
+        </div>
+        <div style="display:flex;gap:8px">
+          <button id="openCam" class="btn">Open Camera</button>
+          <button id="capture" class="btn">📸 Capture</button>
+          <button id="reset" class="btn btn-ghost">Reset</button>
+        </div>
+      </div>
+
+      <div class="video-wrap" style="margin-top:12px">
+        <video id="video" playsinline autoplay muted></video>
+        <canvas id="canvas" style="display:none"></canvas>
+
+        <div class="preview-row" style="width:100%;margin-top:10px">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+            <div id="swatch" class="swatch"></div>
+            <div class="small">Live preview</div>
+          </div>
+          <div style="flex:1">
+            <div id="rgbText" class="metrics">R - G - B</div>
+            <div id="hsvText" class="metrics"></div>
+            <div style="margin-top:8px" class="meter"><div id="meterLive" class="meter-fill" style="width:0%;background:linear-gradient(90deg,#ffd77a,#f07b3a)"></div></div>
+            <div class="hint">Tip: place a small white square next to the strip for consistent color.</div>
+          </div>
+        </div>
+        <div class="note" id="cameraNote"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div><div class="small">Detected</div><div id="detectedState" style="font-weight:700;color:var(--accent)">No sample</div></div>
+        <div style="text-align:right"><div class="small">Confidence</div><div id="confidence" style="font-weight:700">--%</div></div>
+      </div>
+
+      <div style="margin-top:12px">
+        <div class="small">Moisture status</div>
+        <div id="statusBadge" style="margin-top:8px"><span class="badge status-opt">--</span></div>
+
+        <div style="margin-top:12px" class="small">Germination estimate</div>
+        <div class="meter" style="margin-top:8px"><div id="meterFill" class="meter-fill" style="width:0%;background:linear-gradient(90deg,#8ef07a,#1e7f3f)"></div></div>
+        <div id="scoreText" style="margin-top:8px;font-weight:700">-- / 100</div>
+
+        <div style="margin-top:12px;display:flex;gap:10px;align-items:flex-start">
+          <div style="width:48px;height:48px;border-radius:10px;background:var(--glass);display:flex;align-items:center;justify-content:center" id="adviceIcon">🌱</div>
+          <div>
+            <div id="adviceText" style="font-weight:600">Capture the strip to get advice.</div>
+            <div id="adviceSub" class="small" style="margin-top:6px">Supports Malayalam & English.</div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+          <button id="saveSample" class="btn">Save</button>
+          <button id="downloadReport" class="btn btn-ghost">Download report</button>
+          <div id="loader" style="display:none" class="loading" title="Analyzing"></div>
+        </div>
+
+        <div style="margin-top:12px">
+          <div class="small">History</div>
+          <div id="history" style="max-height:200px;overflow:auto;margin-top:8px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <strong>How it works</strong>
+    <p class="small">Site crops the center region (indicator strip), samples pixels, converts to HSV, compares to pre-calibrated seed values and shows moisture + germination estimate. Use a white square for better accuracy.</p>
+  </div>
+
+  <div class="footer">Made for YIP • Use Chrome/Samsung Browser for best results • Allow camera when prompted</div>
+</div>
+
+<script>
+/* ---------- Calibration DB (example) ---------- */
+const calibrations = {
+  paddy: { display:'Paddy', idealRgb:[60,120,200], tolerance:70, lowB:100, highB:170 },
+  wheat: { display:'Wheat', idealRgb:[80,140,160], tolerance:70, lowB:90, highB:150 },
+  maize: { display:'Maize', idealRgb:[70,130,140], tolerance:72, lowB:95, highB:155 }
+};
+
+/* ---------- DOM ---------- */
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const swatch = document.getElementById('swatch');
+const rgbText = document.getElementById('rgbText');
+const hsvText = document.getElementById('hsvText');
+const meterLive = document.getElementById('meterLive');
+const meterFill = document.getElementById('meterFill');
+const statusBadge = document.getElementById('statusBadge');
+const detectedState = document.getElementById('detectedState');
+const confidenceEl = document.getElementById('confidence');
+const scoreText = document.getElementById('scoreText');
+const adviceText = document.getElementById('adviceText');
+const adviceIcon = document.getElementById('adviceIcon');
+const adviceSub = document.getElementById('adviceSub');
+const historyEl = document.getElementById('history');
+const loader = document.getElementById('loader');
+const cameraNote = document.getElementById('cameraNote');
+
+const openCamBtn = document.getElementById('openCam');
+const captureBtn = document.getElementById('capture');
+const resetBtn = document.getElementById('reset');
+const saveBtn = document.getElementById('saveSample');
+const downloadBtn = document.getElementById('downloadReport');
+const seedSelect = document.getElementById('seedSelect');
+const customName = document.getElementById('customName');
+const langSelect = document.getElementById('lang');
+const themeToggle = document.getElementById('themeToggle');
+
+let stream = null;
+let liveInterval = null;
+let lastSample = null;
+
+/* ---------- i18n ---------- */
+const I18N = {
+  en: { tip:'Capture the packet colour strip to get farmer-friendly advice.', low:'Low moisture. Water lightly.', optimal:'Optimal moisture. Ready to sow.', high:'High moisture. Let it dry a bit.' },
+  ml: { tip:'ബീജ പാക്കറ്റിന്റെ നിറം ക്യാപ്ചര്‍ ചെയ്ത് കർഷക ഉപദേശം കാണുക.', low:'ജലം കുറവാണ്. അല്പം വെള്ളം നൽകുക.', optimal:'ശരിയായ ജലാവസ്ഥ. വിതയ്ക്കാം.', high:'ജലം കൂടുതലാണ്. ഒന്നു വെയ്ക്കുക.' }
+};
+function t(key){ const l = langSelect.value || 'en'; return I18N[l][key] || key; }
+langSelect.addEventListener('change', ()=>{ adviceSub.innerText = t('tip'); });
+adviceSub.innerText = t('tip');
+
+/* ---------- Theme ---------- */
+themeToggle.addEventListener('click', ()=>{
+  const el = document.body;
+  const current = el.getAttribute('data-theme') || 'light';
+  const next = (current === 'light') ? 'dark' : 'light';
+  el.setAttribute('data-theme', next);
+  localStorage.setItem('ss-theme', next);
+});
+if(localStorage.getItem('ss-theme')) document.body.setAttribute('data-theme', localStorage.getItem('ss-theme'));
+
+/* ---------- Seed select ---------- */
+seedSelect.addEventListener('change', ()=>{ customName.style.display = (seedSelect.value==='custom') ? 'inline-block' : 'none'; });
+
+/* ---------- Camera helpers (robust) ---------- */
+async function openCameraRobust(){
+  cameraNote.innerText = '';
+  if(stream) return;
+  // Try facingMode: environment first
+  const constraintsList = [
+    { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } } },
+    { video: { facingMode: { exact: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } } },
+    { video: { width: { ideal: 1280 }, height: { ideal: 720 } } }, // fallback
+  ];
+  // Try each constraint set
+  for(const c of constraintsList){
+    try{
+      const s = await navigator.mediaDevices.getUserMedia(c);
+      if(s){
+        stream = s;
+        video.srcObject = stream;
+        await video.play().catch(()=>{}); // some browsers require interaction
+        // check if video actually has frames; wait a bit
+        const ok = await waitForVideoReady(700);
+        if(ok) return;
+        // else stop and try next
+        stopStream(s);
+      }
+    }catch(e){
+      // try next
+    }
+  }
+
+  // If still not working, try selecting a back camera by deviceId
+  try{
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const videoInputs = devices.filter(d => d.kind === 'videoinput');
+    // Heuristic: choose device label containing 'back' or last device
+    let backDevice = videoInputs.find(d => /back|rear|camera 2|camera_1/i.test(d.label));
+    if(!backDevice && videoInputs.length) backDevice = videoInputs[videoInputs.length-1];
+    if(backDevice){
+      try{
+        const s = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: backDevice.deviceId }, width: { ideal: 1280 } }});
+        stream = s; video.srcObject = stream; await video.play().catch(()=>{}); const ok=await waitForVideoReady(700);
+        if(ok) return;
+        stopStream(s);
+      }catch(e){ /* ignore */ }
+    }
+  }catch(e){ /* ignore enumerate error */ }
+
+  // Last fallback: request any camera
+  try{
+    const s = await navigator.mediaDevices.getUserMedia({ video:true });
+    stream = s; video.srcObject = stream; await video.play().catch(()=>{}); const ok=await waitForVideoReady(700);
+    if(ok) return;
+  }catch(e){
+    cameraNote.innerText = 'Camera not available. Check permission or try another browser.';
+    console.error('camera open failed', e);
+  }
+}
+
+function stopStream(s){
+  try{ s.getTracks().forEach(t=>t.stop()); }catch(e){}
+}
+
+function waitForVideoReady(timeoutMs){
+  return new Promise(resolve=>{
+    const start = Date.now();
+    const check = ()=>{
+      if(video.videoWidth && video.videoHeight){
+        resolve(true);
+      } else if(Date.now() - start > timeoutMs){
+        resolve(false);
+      } else {
+        requestAnimationFrame(check);
+      }
+    };
+    check();
+  });
+}
+
+/* ---------- Event listeners ---------- */
+openCamBtn.addEventListener('click', async ()=>{
+  await openCameraRobust();
+  if(stream){
+    cameraNote.innerText = 'Camera active. Position indicator strip near the center.';
+    startLivePreview();
+  }
+});
+
+captureBtn.addEventListener('click', ()=> sampleFrame(false));
+resetBtn.addEventListener('click', clearResults);
+saveBtn.addEventListener('click', ()=> { if(lastSample) saveHistory(lastSample); });
+downloadBtn.addEventListener('click', ()=> { if(lastSample) downloadReport(lastSample); });
+
+/* ---------- Live preview ---------- */
+function startLivePreview(){
+  if(liveInterval) clearInterval(liveInterval);
+  liveInterval = setInterval(()=> sampleFrame(true), 700);
+}
+
+/* ---------- Sampling & analysis ---------- */
+function sampleFrame(isLive){
+  if(!stream){ cameraNote.innerText = 'Open camera first'; return; }
+  const w = video.videoWidth, h = video.videoHeight;
+  if(!w || !h) return;
+  // center crop where strip should be
+  const cropW = Math.floor(w * 0.6);
+  const cropH = Math.floor(h * 0.12);
+  const sx = Math.floor((w - cropW)/2);
+  const sy = Math.floor((h - cropH)/2);
+  canvas.width = cropW; canvas.height = cropH;
+  const ctx = canvas.getContext('2d');
+  try{
+    ctx.drawImage(video, sx, sy, cropW, cropH, 0, 0, cropW, cropH);
+  }catch(e){
+    console.error('drawImage failed', e);
+    return;
+  }
+  const data = ctx.getImageData(0,0,cropW,cropH).data;
+  let r=0,g=0,b=0,count=0;
+  const step = 6;
+  for(let i=0;i<data.length;i+=4*step){
+    r += data[i]; g += data[i+1]; b += data[i+2]; count++;
+  }
+  r = Math.round(r/count); g = Math.round(g/count); b = Math.round(b/count);
+  const hsv = rgbToHsv(r,g,b);
+  // update live UI
+  swatch.style.background = `rgb(${r},${g},${b})`;
+  rgbText.innerText = `R ${r} • G ${g} • B ${b}`;
+  hsvText.innerText = `H ${Math.round(hsv[0])}° • S ${Math.round(hsv[1]*100)}% • V ${Math.round(hsv[2]*100)}%`;
+  const liveScore = computeSimpleScore(r,g,b);
+  meterLive.style.width = liveScore + '%';
+  meterLive.style.background = scoreToGradient(liveScore);
+
+  if(!isLive){
+    analyzeAndShow(r,g,b,hsv);
+  } else {
+    lastSample = { r,g,b,hsv,ts:new Date().toISOString() };
+  }
+}
+
+/* ---------- Main analysis ---------- */
+async function analyzeAndShow(r,g,b,hsv){
+  loader.style.display = 'inline-block';
+  await new Promise(r=>setTimeout(r,300)); // UX pause
+  const seedKey = (seedSelect.value === 'custom' && customName.value.trim()) ? customName.value.trim() : seedSelect.value;
+  const cal = calibrations[seedSelect.value] || null;
+  let sample;
+  if(cal){
+    const d = colorDistance([r,g,b], cal.idealRgb || cal.ideal);
+    const score = Math.round(Math.max(0, 100 - (d / cal.tolerance) * 100));
+    const state = (b < cal.lowB) ? 'LOW' : (b > cal.highB ? 'HIGH' : 'OPTIMAL');
+    let conf = Math.round((1 - Math.min(1, d/(cal.tolerance*2))) * 100);
+    if(hsv[2] < 0.12 || hsv[2] > 0.98) conf = Math.round(conf*0.6);
+    if(hsv[1] < 0.06) conf = Math.round(conf*0.8);
+    sample = { seed:seedKey, r,g,b,hsv,score,state,conf,ts:new Date().toISOString() };
+  } else {
+    const state = b < 100 ? 'LOW' : (b > 170 ? 'HIGH' : 'OPTIMAL');
+    const score = state === 'OPTIMAL' ? 82 : (state === 'LOW' ? 45 : 58);
+    const conf = 70;
+    sample = { seed:seedKey, r,g,b,hsv,score,state,conf,ts:new Date().toISOString() };
+  }
+  lastSample = sample;
+  showResults(sample);
+  loader.style.display = 'none';
+}
+
+/* ---------- Show results ---------- */
+function showResults(s){
+  // badge
+  statusBadge.innerHTML = '';
+  const span = document.createElement('span'); span.className = 'badge';
+  if(s.state === 'LOW'){ span.classList.add('status-low'); span.innerText = t('low'); adviceIcon('water'); }
+  else if(s.state === 'OPTIMAL'){ span.classList.add('status-opt'); span.innerText = t('optimal'); adviceIcon('sun'); }
+  else { span.classList.add('status-high'); span.innerText = t('high'); adviceIcon('warn'); }
+  statusBadge.appendChild(span);
+  detectedState.innerText = `${s.seed} — ${s.state}`;
+  confidenceEl.innerText = s.conf + '%';
+  scoreText.innerText = s.score + ' / 100';
+  meterFill.style.width = s.score + '%';
+  meterFill.style.background = scoreToGradient(s.score);
+  adviceText.innerText = t(s.state.toLowerCase());
+  adviceSub.innerText = `${t('tip')} • Confidence ${s.conf}%`;
+  renderHistory(); // refresh list
+}
+
+/* ---------- Advice icons ---------- */
+function adviceIcon(kind){
+  if(kind==='sun') adviceIcon.innerText = '☀️';
+  else if(kind==='water') adviceIcon.innerText = '💧';
+  else adviceIcon.innerText = '⚠️';
+}
+
+/* ---------- History ---------- */
+function saveHistory(sample){
+  if(!sample) return;
+  const all = JSON.parse(localStorage.getItem('ss-history')||'[]');
+  all.unshift(sample);
+  localStorage.setItem('ss-history', JSON.stringify(all.slice(0,50)));
+  renderHistory();
+}
+function renderHistory(){
+  const all = JSON.parse(localStorage.getItem('ss-history')||'[]');
+  historyEl.innerHTML = '';
+  all.forEach(s=>{
+    const el = document.createElement('div');
+    el.style.padding = '8px'; el.style.borderRadius='8px'; el.style.border='1px solid rgba(0,0,0,0.04)'; el.style.marginBottom='8px';
+    el.innerHTML = `<div style="display:flex;justify-content:space-between"><div><strong>${s.seed}</strong><div class="small">${new Date(s.ts).toLocaleString()}</div></div><div style="text-align:right"><div>${s.score}/100</div><div class="small">${s.conf}%</div></div></div>`;
+    el.addEventListener('click', ()=> { showResults(s); lastSample = s; });
+    historyEl.appendChild(el);
+  });
+}
+
+/* ---------- Download report ---------- */
+function downloadReport(sample){
+  const s = sample || lastSample;
+  if(!s){ alert('No sample'); return; }
+  const data = { seed:s.seed, timestamp:s.ts, score:s.score, state:s.state, confidence:s.conf, rgb:[s.r,s.g,s.b] };
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `seed-report-${s.seed}-${(new Date()).toISOString().slice(0,19)}.json`; document.body.appendChild(a); a.click(); a.r
