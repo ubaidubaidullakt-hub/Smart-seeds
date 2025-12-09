@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Smart Seed Analyzer — Modern</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f7f6; --card:#fff; --accent:#1e7f3f; --muted:#4b5563; --danger:#d9534f; --glass: rgba(255,255,255,0.6);
+  --success:#16a34a; --warning:#f59e0b; --info:#0ea5e9;
+}
+[data-theme='dark']{
+  --bg:#071323; --card:#071827; --accent:#38d39f; --muted:#94a3b8; --danger:#ff7b7b; --glass: rgba(20,28,36,0.6);
+  --success:#34d399; --warning:#fbbf24; --info:#60a5fa;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial,sans-serif;background:var(--bg);color:var(--muted);-webkit-font-smoothing:antialiased}
+.container{max-width:980px;margin:18px auto;padding:18px}
+.header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;gap:12px;align-items:center}
+.logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#7ad8a0);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:20px}
+.title{font-size:18px;color:var(--accent);font-weight:700}
+.subtitle{font-size:13px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:14px}
+.card{background:var(--card);border-radius:14px;padding:14px;box-shadow:0 8px 28px rgba(2,6,23,0.06)}
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.select,input,button{padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);background:transparent;font-size:14px}
+.select{min-width:150px}
+.btn{background:var(--accent);color:#fff;border:none;cursor:pointer;border-radius:10px;padding:10px 14px}
+.btn.ghost{background:transparent;border:1px dashed rgba(0,0,0,0.06);color:var(--muted)}
+.video-wrap{display:flex;gap:12px;flex-direction:column;align-items:center}
+video{width:100%;height:auto;border-radius:12px;background:#000}
+.preview-row{display:flex;gap:12px;align-items:center}
+.swatch{width:72px;height:72px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);box-shadow:inset 0 1px 0 rgba(255,255,255,0.6)}
+.metrics{font-size:13px;color:var(--muted)}
+.meter-wrap{margin-top:8px}
+.meter{height:18px;background:linear-gradient(180deg,rgba(0,0,0,0.02),transparent);border-radius:12px;overflow:hidden;border:1px solid rgba(0,0,0,0.03)}
+.meter-fill{height:100%;width:0%;background:linear-gradient(90deg,#8ef07a,#1e7f3f);transition:width 900ms ease, background 400ms linear}
+.badge{display:inline-block;padding:6px 10px;border-radius:999px;font-weight:700}
+.status-low{background:rgba(217,83,79,0.08);color:var(--danger);border:1px solid rgba(217,83,79,0.12)}
+.status-opt{background:rgba(30,127,63,0.08);color:var(--success);border:1px solid rgba(30,127,63,0.12)}
+.status-high{background:rgba(14,165,233,0.06);color:var(--info);border:1px solid rgba(14,165,233,0.12)}
+.advice{margin-top:10px;font-size:14px;color:var(--muted);display:flex;gap:12px;align-items:flex-start}
+.icon-box{width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:var(--glass)}
+.history-list{max-height:220px;overflow:auto;margin-top:8px}
+.hist-item{padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.04);margin-bottom:8px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent)}
+.controls-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.small{font-size:12px;color:var(--muted)}
+.loading{display:inline-block;width:18px;height:18px;border-radius:50%;border:3px solid rgba(255,255,255,0.2);border-top-color:var(--accent);animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.result-title{font-size:14px;color:var(--muted);margin-bottom:6px}
+@media(min-width:920px){.grid{grid-template-columns:1fr 420px}}
+.hint{font-size:12px;color:var(--muted);margin-top:8px}
+.center{display:flex;align-items:center;justify-content:center}
+.fade-in{animation:fadeIn 0.45s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body data-theme="light">
+<div class="container">
+  <div class="header">
+    <div class="brand">
+      <div class="logo">SS</div>
+      <div>
+        <div class="title">Smart Seed Analyzer</div>
+        <div class="subtitle small">Biodegradable seed packet + camera analysis</div>
+      </div>
+    </div>
+
+    <div class="controls-right">
+      <select id="lang" title="Language">
+        <option value="en">EN</option>
+        <option value="ml">മലയാളം</option>
+      </select>
+      <button id="themeToggle" class="btn ghost" title="Toggle theme">🌗</button>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- LEFT: Camera & Controls -->
+    <div class="card fade-in">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <div style="display:flex;gap:10px;align-items:center">
+          <select id="seedSelect" class="select">
+            <option value="paddy">Paddy</option>
+            <option value="wheat">Wheat</option>
+            <option value="maize">Maize</option>
+            <option value="custom">Add custom...</option>
+          </select>
+          <input id="customName" placeholder="Custom seed name" style="display:none;padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,0.06)" />
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button id="openCam" class="btn">Open Camera</button>
+          <button id="capture" class="btn">📸 Capture</button>
+          <button id="reset" class="btn ghost">Reset</button>
+        </div>
+      </div>
+
+      <div style="margin-top:12px" class="video-wrap">
+        <video id="video" playsinline autoplay></video>
+        <canvas id="canvas" style="display:none"></canvas>
+
+        <div class="preview-row" style="width:100%;margin-top:10px">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+            <div id="swatch" class="swatch"></div>
+            <div class="small">Live preview</div>
+          </div>
+
+          <div style="flex:1">
+            <div class="metrics" id="rgbText">R - G - B</div>
+            <div class="metrics" id="hsvText"></div>
+            <div class="meter-wrap" style="margin-top:8px">
+              <div class="meter"><div id="meterFillLive" class="meter-fill" style="width:0%"></div></div>
+            </div>
+            <div class="hint small">Tip: place a small white patch near the strip for consistent lighting.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Results & Advice -->
+    <div class="card fade-in">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div class="result-title">Detected</div>
+          <div id="detectedState" style="font-weight:700;color:var(--accent)">No sample yet</div>
+        </div>
+        <div style="text-align:right">
+          <div class="small">Confidence</div>
+          <div id="confidence" style="font-weight:700">--%</div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <div class="small">Moisture status</div>
+        <div id="statusBadge" style="margin-top:8px"><span class="badge status-opt">--</span></div>
+
+        <div style="margin-top:12px" class="small">Germination estimate</div>
+        <div class="meter" style="margin-top:8px"><div id="meterFill" class="meter-fill" style="width:0%"></div></div>
+        <div id="scoreText" style="margin-top:8px;font-weight:700">-- / 100</div>
+
+        <div class="advice" style="margin-top:12px">
+          <div class="icon-box" id="adviceIcon" aria-hidden="true">
+            <!-- icon inserted via JS -->
+            🌱
+          </div>
+          <div>
+            <div id="adviceText" style="font-weight:600">Capture the packet strip to get advice.</div>
+            <div id="adviceSub" class="small" style="margin-top:6px;color:var(--muted)">Supports Malayalam and English.</div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+          <button id="saveSample" class="btn">Save</button>
+          <button id="downloadReport" class="btn ghost">Download report</button>
+          <div id="analyzing" style="display:none" class="loading" title="Analyzing"></div>
+        </div>
+
+        <div style="margin-top:12px">
+          <div class="small">History</div>
+          <div class="history-list" id="history"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card small" style="margin-top:12px">
+    <strong>How it works:</strong> The site crops the camera center (where the indicator strip should be), averages colors while compensating for brightness/saturation, compares to seed calibration values, and returns a moisture state + germination estimate with farmer advice. Use a white patch for best results.
+  </div>
+
+  <footer style="margin-top:12px;text-align:center;color:var(--muted);font-size:13px">Made for YIP • Works on mobile — allow camera permission</footer>
+</div>
+
+<script>
+/* ----------------------
+  I18n strings (EN + Malayalam)
+----------------------- */
+const I18N = {
+  en: {
+    tip: 'Capture the packet colour strip to get farmer-friendly advice.',
+    low: 'Low moisture. Water lightly before sowing.',
+    optimal: 'Optimal moisture. Ready to sow.',
+    high: 'High moisture. Allow to dry slightly; avoid rot.',
+    download: 'Download report'
+  },
+  ml: {
+    tip: 'ബീജതൊക്കത്തിന്റെ നിറം പിൻകോണ്ടു പിടിക്കുക — കർഷക ഉപദേശങ്ങൾ കാണാം.',
+    low: 'ജലത്തിന്റെ അളവ് കുറവ്. തഴുകിയാൽ തളിമേലം വെള്ളം നല്കുക.',
+    optimal: 'ഉചിതമായ ജലസ്ഥിതി. വിതയ്ക്കാൻ തയ്യാർ.',
+    high: 'ജലം കൂടുതലാണ്. കൊയ്ത്തു വെയ്ക്കുക; പോടൽ ഒഴിവാക്കുക.',
+    download: 'റിപോർട്ട് ഡൗൺലോഡ് ചെയ്യുക'
+  }
+};
+
+/* ----------------------
+  Seed calibration DB (example values)
+  Replace idealRgb with values you measure during calibration.
+----------------------- */
+const calibrations = {
+  paddy: { display:'Paddy', idealRgb:[60,120,200], tolerance:70, lowB:100, highB:170 },
+  wheat: { display:'Wheat', idealRgb:[80,140,160], tolerance:70, lowB:90, highB:150 },
+  maize: { display:'Maize', idealRgb:[70,130,140], tolerance:72, lowB:95, highB:155 }
+};
+
+/* ----------------------
+  DOM Elements
+----------------------- */
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const swatch = document.getElementById('swatch');
+const rgbText = document.getElementById('rgbText') || document.createElement('div');
+const hsvText = document.getElementById('hsvText') || document.createElement('div');
+const meterFill = document.getElementById('meterFill');
+const meterFillLive = document.getElementById('meterFillLive');
+const statusBadge = document.getElementById('statusBadge');
+const detectedState = document.getElementById('detectedState');
+const adviceText = document.getElementById('adviceText');
+const adviceSub = document.getElementById('adviceSub');
+const adviceIcon = document.getElementById('adviceIcon');
+const confidenceEl = document.getElementById('confidence');
+const scoreText = document.getElementById('scoreText');
+const historyEl = document.getElementById('history');
+const analyzingEl = document.getElementById('analyzing');
+
+const openCamBtn = document.getElementById('openCam');
+const captureBtn = document.getElementById('capture');
+const resetBtn = document.getElementById('reset');
+const saveBtn = document.getElementById('saveSample');
+const downloadBtn = document.getElementById('downloadReport');
+
+const seedSelect = document.getElementById('seedSelect');
+const customName = document.getElementById('customName');
+
+const langSelect = document.getElementById('lang');
+const themeToggle = document.getElementById('themeToggle');
+
+let stream = null;
+let liveInterval = null;
+let lastSample = null;
+
+/* ----------------------
+  Theme toggle
+----------------------- */
+themeToggle.addEventListener('click', ()=>{
+  const body = document.body;
+  const current = body.getAttribute('data-theme') || 'light';
+  const next = current === 'light' ? 'dark' : 'light';
+  body.setAttribute('data-theme', next);
+  localStorage.setItem('ss-theme', next);
+});
+if(localStorage.getItem('ss-theme')) document.body.setAttribute('data-theme', localStorage.getItem('ss-theme'));
+
+/* ----------------------
+  Language
+----------------------- */
+langSelect.addEventListener('change', ()=> updateLang());
+function updateLang(){
+  const v = langSelect.value;
+  adviceSub.innerText = I18N[v].tip;
+  downloadBtn.innerText = I18N[v].download || 'Download report';
+}
+updateLang();
+
+/* ----------------------
+  Seed select
+----------------------- */
+seedSelect.addEventListener('change', ()=> {
+  if(seedSelect.value === 'custom') customName.style.display = 'inline-block';
+  else customName.style.display = 'none';
+});
+
+/* ----------------------
+  Camera controls
+----------------------- */
+openCamBtn.addEventListener('click', async ()=>{
+  try{
+    if(stream) return;
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    video.srcObject = stream;
+    await video.play();
+    startLivePreview();
+  } catch(err){
+    alert('Camera access needed. Allow camera in browser site settings.');
+    console.error(err);
+  }
+});
+
+captureBtn.addEventListener('click', ()=> sampleFrame(false));
+resetBtn.addEventListener('click', clearResults);
+saveBtn.addEventListener('click', ()=> { if(lastSample) saveHistory(lastSample); });
+downloadBtn.addEventListener('click', ()=> { if(lastSample) downloadReport(lastSample); });
+
+/* ----------------------
+  Live preview sampling
+----------------------- */
+function startLivePreview(){
+  if(liveInterval) clearInterval(liveInterval);
+  liveInterval = setInterval(()=> sampleFrame(true), 700);
+}
+
+/* ----------------------
+  Sample & analyze
+  - center crop small strip
+  - sample every Nth pixel for speed
+  - calculate RGB average + HSV
+----------------------- */
+function sampleFrame(isLive){
+  if(!stream){ alert('Open camera first'); return; }
+
+  const w = video.videoWidth, h = video.videoHeight;
+  if(!w || !h) return;
+
+  const cropW = Math.floor(w * 0.6);
+  const cropH = Math.floor(h * 0.12);
+  const sx = Math.floor((w - cropW) / 2);
+  const sy = Math.floor((h - cropH) / 2);
+
+  canvas.width = cropW; canvas.height = cropH;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, sx, sy, cropW, cropH, 0, 0, cropW, cropH);
+
+  // sample pixels
+  const data = ctx.getImageData(0,0,cropW,cropH).data;
+  let r=0,g=0,b=0,count=0;
+  const step = 6; // adjust for speed / accuracy
+  for(let i=0;i<data.length;i += 4*step){
+    r += data[i]; g += data[i+1]; b += data[i+2]; count++;
+  }
+  r = Math.round(r/count); g = Math.round(g/count); b = Math.round(b/count);
+  const hsv = rgbToHsv(r,g,b);
+
+  // live UI
+  swatch.style.background = `rgb(${r},${g},${b})`;
+  rgbText && (rgbText.innerText = `R ${r} • G ${g} • B ${b}`);
+  hsvText && (hsvText.innerText = `H ${Math.round(hsv[0])}° • S ${Math.round(hsv[1]*100)}% • V ${Math.round(hsv[2]*100)}%`);
+
+  // quick live meter feedback
+  const simpleScore = computeSimpleScore(r,g,b);
+  meterFillLive.style.width = simpleScore + '%';
+
+  // finally analyze (show results) if capture or high-confidence live trigger
+  if(!isLive){
+    analyzeAndShow(r,g,b,hsv);
+  } else {
+    // store lastSample for optional save if user presses Capture soon after
+    lastSample = { r,g,b,hsv, ts: new Date().toISOString() };
+  }
+}
+
+/* ----------------------
+  Main analysis pipeline
+----------------------- */
+async function analyzeAndShow(r,g,b,hsv){
+  // UI: show loading
+  analyzingEl.style.display = 'inline-block';
+  await new Promise(r=>setTimeout(r,350)); // brief UX pause to show spinner
+
+  // determine seed calibration
+  const seedKey = seedSelect.value === 'custom' && customName.value.trim() ? customName.value.trim() : seedSelect.value;
+  const cal = calibrations[seedSelect.value] || null;
+
+  // compute score & state
+  let sample = {};
+  if(cal){
+    const d = colorDistance([r,g,b], cal.idealRgb || cal.ideal); // tolerate both keys
+    const score = Math.round(Math.max(0, 100 - (d / cal.tolerance) * 100));
+    const state = (b < cal.lowB) ? 'LOW' : (b > cal.highB ? 'HIGH' : 'OPTIMAL');
+    let conf = Math.round((1 - Math.min(1, d / (cal.tolerance * 2))) * 100);
+    if(hsv[2] < 0.12 || hsv[2] > 0.98) conf = Math.round(conf * 0.6);
+    if(hsv[1] < 0.06) conf = Math.round(conf * 0.8);
+    sample = { seed: seedKey, r,g,b,hsv, score, state, conf, ts: new Date().toISOString() };
+  } else {
+    // generic heuristics if custom seed
+    const state = b < 100 ? 'LOW' : (b > 170 ? 'HIGH' : 'OPTIMAL');
+    const score = state === 'OPTIMAL' ? 82 : (state === 'LOW' ? 45 : 58);
+    const conf = 70;
+    sample = { seed: seedKey, r,g,b,hsv, score, state, conf, ts: new Date().toISOString() };
+  }
+
+  // store lastSample
+  lastSample = sample;
+
+  // update UI elements with animation
+  showResults(sample);
+
+  // hide loader
+  analyzingEl.style.display = 'none';
+}
+
+/* ----------------------
+  UI update: show results
+----------------------- */
+function showResults(s){
+  // badge
+  statusBadge.innerHTML = '';
+  const span = document.createElement('span'); span.className = 'badge';
+  if(s.state === 'LOW'){ span.classList.add('status-low'); span.innerText = translate('low'); setAdviceIcon('water'); }
+  else if(s.state === 'OPTIMAL'){ span.classList.add('status-opt'); span.innerText = translate('optimal'); setAdviceIcon('sun'); }
+  else { span.classList.add('status-high'); span.innerText = translate('high'); setAdviceIcon('warn'); }
+  statusBadge.appendChild(span);
+
+  // labels
+  detectedState.innerText = `${s.seed} — ${s.state}`;
+  confidenceEl.innerText = s.conf + '%';
+  scoreText.innerText = s.score + ' / 100';
+  meterFill.style.width = s.score + '%';
+  meterFill.style.background = scoreToGradient(s.score);
+
+  // advice text
+  adviceText.innerText = translate(s.state.toLowerCase());
+  adviceSub.innerText = `${translate('tip')} • Confidence ${s.conf}%`;
+
+  // save to history preview (do not auto-save)
+  renderHistoryPreview(s);
+}
+
+/* ----------------------
+  Helpers: icons & i18n
+----------------------- */
+function setAdviceIcon(kind){
+  if(kind === 'sun') adviceIcon.innerText = '☀️';
+  else if(kind === 'water') adviceIcon.innerText = '💧';
+  else adviceIcon.innerText = '⚠️';
+}
+
+function translate(key){
+  const lang = langSelect.value || 'en';
+  if(key === 'low') return I18N[lang].low;
+  if(key === 'optimal') return I18N[lang].optimal;
+  if(key === 'high') return I18N[lang].high;
+  if(key === 'tip') return I18N[lang].tip;
+  return I18N[lang][key] || key;
+}
+
+/* ----------------------
+  History (localStorage)
+----------------------- */
+function saveHistory(sample){
+  const all = JSON.parse(localStorage.getItem('ss-history')||'[]');
+  all.unshift(sample);
+  localStorage.setItem('ss-history', JSON.stringify(all.slice(0,50)));
+  renderHistory();
+}
+function renderHistory(){
+  const all = JSON.parse(localStorage.getItem('ss-history')||'[]');
+  historyEl.innerHTML = '';
+  all.forEach(s=>{
+    const d = document.createElement('div'); d.className = 'hist-item';
+    d.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><div><strong>${s.seed}</strong><div class="small">${new Date(s.ts).toLocaleString()}</div></div><div style="text-align:right"><div>${s.score}/100</div><div class="small">${s.conf}%</div></div></div>`;
+    d.addEventListener('click', ()=> { showResults(s); lastSample = s; });
+    historyEl.appendChild(d);
+  });
+}
+function renderHistoryPreview(s){
+  // temporary show most recent in top of history area without saving
+  // (keeps UI responsive)
+}
+
+/* ----------------------
+  Downloadable report (basic)
+----------------------- */
+function downloadReport(sample){
+  const s = sample || lastSample;
+  if(!s) return alert('No sample to download
