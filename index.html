@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Smart Seed — Moisture Analyzer (Pro)</title>
+<style>
+  :root{
+    --bg:#f4f7f6; --card:#fff; --accent:#196f3d; --muted:#55636a; --danger:#d64545;
+    --good:#1e7f3f; --safe:#f6fff7;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; font-family:Inter,system-ui,Arial,sans-serif; background:var(--bg); color:var(--muted); -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1100px;margin:18px auto;padding:18px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .brand{display:flex;gap:12px;align-items:center}
+  .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#7ad8a0);display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:20px}
+  h1{margin:0;font-size:18px;color:var(--accent)}
+  .subtitle{font-size:13px;color:var(--muted)}
+  .grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:14px}
+  @media(min-width:980px){.grid{grid-template-columns:1fr 420px}}
+  .card{background:var(--card);border-radius:12px;padding:14px;box-shadow:0 10px 30px rgba(2,6,23,0.06)}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  select,input,button{padding:10px 12px;border-radius:10px;border:1px solid #e6eef0;background:transparent;font-size:14px}
+  button.primary{background:var(--accent);color:#fff;border:none;cursor:pointer}
+  button.ghost{background:transparent;border:1px dashed #dfeaea;cursor:pointer}
+  .video-wrap{display:flex;flex-direction:column;gap:12px;align-items:center}
+  .video-frame{width:100%;height:350px;border-radius:10px;overflow:hidden;background:black;position:relative}
+  video{width:100%;height:100%;object-fit:cover}
+  .guide{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:110px;height:110px;border-radius:50%;border:3px dashed rgba(255,255,255,0.9);pointer-events:none}
+  .preview{display:flex;gap:12px;align-items:center}
+  .swatch{width:68px;height:68px;border-radius:12px;border:1px solid #e9f1ee;box-shadow:inset 0 2px 6px rgba(255,255,255,0.6)}
+  .metrics{font-size:13px;color:var(--muted)}
+  .meter{height:20px;background:#e9f6f0;border-radius:12px;overflow:hidden;margin-top:8px;border:1px solid rgba(0,0,0,0.03)}
+  .meter-fill{height:100%;width:0%;background:linear-gradient(90deg,#8ef07a,#1e7f3f);transition:width 900ms cubic-bezier(.2,.9,.2,1)}
+  .badge{display:inline-block;padding:8px 12px;border-radius:999px;font-weight:700}
+  .status-low{background:#fff5f5;color:var(--danger);border:1px solid #f7d6d6}
+  .status-opt{background:#f3fff6;color:#057a3b;border:1px solid #d4efd4}
+  .status-high{background:#f2f8ff;color:#0b62a3;border:1px solid #d8e9fb}
+  .history{max-height:220px;overflow:auto;margin-top:8px}
+  .hist-item{padding:8px;border-radius:8px;border:1px solid #eef6f1;margin-bottom:8px;background:linear-gradient(180deg,rgba(255,255,255,0.6),transparent)}
+  .small{font-size:13px;color:var(--muted)}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  footer{font-size:13px;color:var(--muted);text-align:center;margin-top:12px}
+  .legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .legend .item{display:flex;gap:8px;align-items:center}
+  .colorbox{width:20px;height:20px;border-radius:4px;border:1px solid rgba(0,0,0,0.06)}
+  .pro{font-size:12px;color:var(--muted)}
+  /* responsive */
+  @media(max-width:520px){ .video-frame{height:260px} .logo{width:44px;height:44px;font-size:16px} }
+</style>
+</head>
+<body data-theme="light">
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo">SS</div>
+      <div>
+        <h1>Smart Seed — Moisture Analyzer (Pro)</h1>
+        <div class="subtitle small">Rear-camera color analysis • Farmer report • On-device ML classifier</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <select id="langSelect" title="Language">
+        <option value="en">English</option>
+        <option value="ml">Malayalam</option>
+        <option value="hi">हिन्दी</option>
+      </select>
+      <button id="enableAudio" class="ghost">Enable Audio</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- LEFT: Camera + Controls -->
+    <div class="card">
+      <div style="display:flex;gap:10px;align-items:center;justify-content:space-between">
+        <div style="display:flex;gap:10px;align-items:center">
+          <label class="small">Seed</label>
+          <select id="seedSelect">
+            <!-- 20 seed types -->
+            <option value="paddy">Paddy (Rice)</option>
+            <option value="wheat">Wheat</option>
+            <option value="ragi">Ragi (Finger Millet)</option>
+            <option value="green_gram">Green Gram</option>
+            <option value="black_gram">Black Gram</option>
+            <option value="bengal_gram">Bengal Gram (Chana)</option>
+            <option value="maize">Maize (Corn)</option>
+            <option value="coconut">Coconut</option>
+            <option value="groundnut">Groundnut</option>
+            <option value="sesame">Sesame</option>
+            <option value="mustard">Mustard</option>
+            <option value="sorghum">Sorghum (Jowar)</option>
+            <option value="foxtail">Foxtail Millet</option>
+            <option value="barnyard">Barnyard Millet</option>
+            <option value="little_millet">Little Millet</option>
+            <option value="pearl_millet">Pearl Millet (Bajra)</option>
+            <option value="soybean">Soybean</option>
+            <option value="sunflower">Sunflower</option>
+            <option value="cotton">Cotton</option>
+            <option value="custom">Custom (calibrate)</option>
+          </select>
+          <input id="customName" placeholder="Custom name" style="display:none" />
+        </div>
+
+        <div style="display:flex;gap:8px">
+          <button id="openCam" class="primary">Open Rear Camera</button>
+          <button id="scanBtn" class="primary">📸 Scan Now</button>
+          <button id="resetBtn" class="ghost">Reset</button>
+        </div>
+      </div>
+
+      <div class="video-wrap" style="margin-top:12px">
+        <div class="video-frame card" style="padding:0">
+          <video id="video" playsinline autoplay muted></video>
+          <div class="guide" aria-hidden="true"></div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+          <div class="preview">
+            <div id="swatch" class="swatch"></div>
+            <div style="margin-left:8px">
+              <div id="rgbText" class="metrics">R - G - B</div>
+              <div id="hsvText" class="metrics small"></div>
+            </div>
+          </div>
+
+          <div style="text-align:right">
+            <div class="small">Legend</div>
+            <div class="legend">
+              <div class="item"><div class="colorbox" style="background:purple"></div><div class="small">Too Dry (Purple/Violet)</div></div>
+              <div class="item"><div class="colorbox" style="background:pink"></div><div class="small">Ideal (Pink/Light Red)</div></div>
+              <div class="item"><div class="colorbox" style="background:green"></div><div class="small">Too Wet (Green)</div></div>
+              <div class="item"><div class="colorbox" style="background:blue"></div><div class="small">Very Wet (Blue)</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pro small" style="margin-top:8px">Tip: include a small white patch near the strip to improve color accuracy.</div>
+      </div>
+
+      <div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button id="calibrateBtn" class="ghost">Calibrate Ideal (for selected seed)</button>
+        <button id="downloadBtn" class="ghost">Download Report (PDF)</button>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: Results + History -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div class="small">Detected</div>
+          <div id="detectedState" style="font-weight:800;font-size:18px">No sample</div>
+        </div>
+        <div style="text-align:right">
+          <div class="small">Confidence</div>
+          <div id="confidence" style="font-weight:800">--%</div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <div class="small">Moisture status</div>
+        <div id="statusBadge" style="margin-top:8px"><span class="badge status-opt">--</span></div>
+
+        <div style="margin-top:14px" class="small">Germination estimate</div>
+        <div class="meter" style="margin-top:8px"><div id="meterFill" class="meter-fill" style="width:0%"></div></div>
+        <div id="scoreText" style="margin-top:8px;font-weight:700">-- / 100</div>
+
+        <div id="advice" class="small" style="margin-top:10px;color:var(--muted)">Capture the packet color strip to get farmer-friendly advice.</div>
+
+        <div class="actions">
+          <button id="saveBtn" class="primary">Save to history</button>
+          <button id="speakBtn" class="ghost">🔊 Voice</button>
+        </div>
+
+        <div style="margin-top:12px">
+          <div class="small">Readings History</div>
+          <div id="historyList" class="history"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="pro">Made for YIP • Works on mobile — allow camera & audio permissions</footer>
+</div>
+
+<script>
+/* --------- Utilities & State --------- */
+const langSelect = document.getElementById('langSelect');
+const enableAudio = document.getElementById('enableAudio');
+
+const openCam = document.getElementById('openCam');
+const scanBtn = document.getElementById('scanBtn');
+const resetBtn = document.getElementById('resetBtn');
+const calibrateBtn = document.getElementById('calibrateBtn');
+const downloadBtn = document.getElementById('downloadBtn');
+
+const video = document.getElementById('video');
+const swatch = document.getElementById('swatch');
+const rgbText = document.getElementById('rgbText');
+const hsvText = document.getElementById('hsvText');
+
+const detectedState = document.getElementById('detectedState');
+const confidenceEl = document.getElementById('confidence');
+const statusBadge = document.getElementById('statusBadge');
+const meterFill = document.getElementById('meterFill');
+const scoreText = document.getElementById('scoreText');
+const advice = document.getElementById('advice');
+
+const seedSelect = document.getElementById('seedSelect');
+const customName = document.getElementById('customName');
+
+const historyList = document.getElementById('historyList');
+const saveBtn = document.getElementById('saveBtn');
+const speakBtn = document.getElementById('speakBtn');
+
+let stream = null;
+let audioCtx = null;
+let lastReport = null;
+
+/* --------- Language strings (EN/ML/HI) --------- */
+const STR = {
+  en: {
+    title: 'Smart Seed Analyzer',
+    tip: 'Place a white patch near strip for consistent reading.',
+    tooDryTitle: 'Too Dry — BAD',
+    tooDryAdvice: 'Very low moisture. Seeds may lose germination — moisturize carefully.',
+    idealTitle: 'Ideal Moisture — GOOD',
+    idealAdvice: 'Perfect moisture for storage and best germination.',
+    tooWetTitle: 'Too Wet — BAD',
+    tooWetAdvice: 'High moisture — fungus risk and quality loss. Dry before storage.',
+    unknown: 'Unknown — improve lighting',
+    saved: 'Saved to history',
+    noReport: 'No reading to download'
+  },
+  ml: {
+    title: 'സ്മാർട്ട് സീഡ് അനലൈസർ',
+    tip: 'സ്ട്രിപ്പിന് അടുത്ത് ഒരു വെളുത്ത പാച്ച് വെക്കുക.',
+    tooDryTitle: 'വളരെ വരണ്ടത് — മോശം',
+    tooDryAdvice: 'തീവ്രമായി കുറവായ ഈർപ്പം. മുളൽ കുറയാം — സൗമ്യമായി ഈർപ്പം നൽകുക.',
+    idealTitle: 'ഇടത്തരം ഈർപ്പ് — നല്ലത്',
+    idealAdvice: 'സംഭരണം, മുളൽക്കൽ എന്നിവയ്ക്ക് ഏറ്റവും അനുയോജ്യം.',
+    tooWetTitle: 'അതി ഈർപ്പം — മോശം',
+    tooWetAdvice: 'ഉയർന്ന ഈർപ്പം — ഫംഗസ് സാധ്യത, ഗുണനിലവാര നഷ്ടം. മുന്നോട്ടു ഉണക്കുക.',
+    unknown: 'അസ്‌പഷ്ടം — നല്ല പ്രകാശം ആവശ്യം',
+    saved: 'ചരിത്രത്തിൽ സംരക്ഷിച്ചു',
+    noReport: 'ഡൗൺലോഡ് ചെയ്യാനുള്ള റീഡിംഗ് ഇല്ല'
+  },
+  hi: {
+    title: 'स्मार्ट सीड एनालाइज़र',
+    tip: 'पारदर्शी पट्टी के पास सफेद पैच रखें।',
+    tooDryTitle: 'बहुत सूखा — खराब',
+    tooDryAdvice: 'बहुत कम नमी। अंकुरण कम हो सकता है — हल्की नमी दें।',
+    idealTitle: 'उचित नमी — अच्छा',
+    idealAdvice: 'भंडारण व अंकुरण के लिए उत्तम नमी।',
+    tooWetTitle: 'बहुत ज्यादा नमी — खराब',
+    tooWetAdvice: 'अधिक नमी — फफूँद का खतरा तथा गुणवत्ता हानि। सूखा कर रखें।',
+    unknown: 'अस्पष्ट — बेहतर प्रकाश में स्कैन करें',
+    saved: 'इतिहास में सहेजा गया',
+    noReport: 'डाउनलोड के लिए कोई रीडिंग नहीं'
+  }
+};
+
+/* --------- ML prototypes for each seed (dry/ideal/wet RGB) ---------
+   These are starting heuristics — you should calibrate with real strips.
+   Each seed entry: { dry:[r,g,b], ideal:[r,g,b], wet:[r,g,b] }
+   Values are example RGBs — calibrate in real deployment.
+*/
+const SEED_PROTOTYPES = {
+  paddy:      { dry:[120,60,150], ideal:[200,100,140], wet:[60,140,170] },
+  wheat:      { dry:[130,80,140], ideal:[200,120,130], wet:[80,150,140] },
+  ragi:       { dry:[110,60,140], ideal:[190,110,140], wet:[70,140,150] },
+  green_gram: { dry:[100,70,150], ideal:[210,120,120], wet:[60,150,120] },
+  black_gram: { dry:[110,60,150], ideal:[195,110,140], wet:[70,150,150] },
+  bengal_gram:{ dry:[120,70,140], ideal:[200,115,135], wet:[80,150,140] },
+  maize:      { dry:[120,80,130], ideal:[200,120,130], wet:[80,150,140] },
+  coconut:    { dry:[130,80,140], ideal:[210,130,140], wet:[80,160,150] },
+  groundnut:  { dry:[140,80,140], ideal:[210,120,130], wet:[90,150,140] },
+  sesame:     { dry:[120,70,130], ideal:[200,110,130], wet:[80,140,140] },
+  mustard:    { dry:[130,80,140], ideal:[205,120,130], wet:[85,150,140] },
+  sorghum:    { dry:[125,75,140], ideal:[200,115,135], wet:[78,148,140] },
+  foxtail:    { dry:[115,70,140], ideal:[195,110,140], wet:[70,145,142] },
+  barnyard:   { dry:[118,72,142], ideal:[198,112,138], wet:[72,148,144] },
+  little_millet:{ dry:[112,68,140], ideal:[193,108,140], wet:[68,142,142] },
+  pearl_millet:{ dry:[123,78,139], ideal:[203,118,136], wet:[82,152,141] },
+  soybean:    { dry:[125,80,138], ideal:[205,120,135], wet:[85,150,144] },
+  sunflower:  { dry:[128,82,136], ideal:[208,122,133], wet:[88,152,143] },
+  cotton:     { dry:[130,85,135], ideal:[210,125,132], wet:[90,155,142] },
+  custom:     { dry:[120,60,150], ideal:[200,100,140], wet:[60,140,170] }
+};
+
+/* --------- Helper: color distance --------- */
+function colorDistance(a,b){
+  const dr = a[0]-b[0], dg = a[1]-b[1], db = a[2]-b[2];
+  return Math.sqrt(dr*dr + dg*dg + db*db);
+}
+
+/* --------- Audio helpers (beep + TTS) --------- */
+function ensureAudio(){
+  try{
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+  }catch(e){ console.warn('AudioContext',e); }
+}
+function beep(freq=800,dur=140){
+  try{
+    ensureAudio();
+    if(!audioCtx) return;
+    const o = audioCtx.createOscillator(), g=audioCtx.createGain();
+    o.type='sine'; o.frequency.value=freq; o.connect(g); g.connect(audioCtx.destination);
+    g.gain.setValueAtTime(0.0001,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.2,audioCtx.currentTime+0.02);
+    o.start();
+    setTimeout(()=>{ g.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+0.02); o.stop(audioCtx.currentTime+0.04); }, dur);
+  }catch(e){ console.warn('beep',e); }
+}
+function speakText(text){
+  try{
+    const lang = langSelect.value === 'ml' ? 'ml-IN' : (langSelect.value === 'hi' ? 'hi-IN' : 'en-IN');
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang; u.pitch = 0.85; u.rate = 1;
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+  }catch(e){ console.warn('TTS',e); }
+}
+
+/* --------- Camera handling (rear only) --------- */
+openCam.addEventListener('click', async ()=>{
+  try{
+    if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; video.srcObject=null; }
+    // try deviceId 'environment' preference
+    const s = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ exact:"environment" }, width:{ideal:1280}, height:{ideal:720} }, audio:false });
+    stream = s; video.srcObject = s; await video.play().catch(()=>{});
+  }catch(e){
+    // fallback: try any camera (but still prefer environment)
+    try{
+      const s = await navigator.mediaDevices.getUserMedia({ video:true, audio:false });
+      stream = s; video.srcObject = s; await video.play().catch(()=>{});
+      alert('Rear camera not available; using default camera. Select rear camera from browser if possible.');
+    }catch(err){
+      alert('Camera unavailable. Allow camera permission or try in Chrome.');
+    }
+  }
+});
+
+/* --------- Sampling & ML classification (manual scan) --------- */
+scanBtn.addEventListener('click', ()=> {
+  if(!stream){ alert('Open camera first'); return; }
+  // take center crop
+  const w = video.videoWidth, h = video.videoHeight;
+  if(!w||!h){ alert('Camera not ready'); return; }
+  const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
+  const cropW = Math.floor(w*0.28), cropH = Math.floor(h*0.28);
+  canvas.width = cropW; canvas.height = cropH;
+  const sx = Math.floor((w-cropW)/2), sy = Math.floor((h-cropH)/2);
+  ctx.drawImage(video, sx, sy, cropW, cropH, 0,0,cropW,cropH);
+  const d = ctx.getImageData(0,0,cropW,cropH).data;
+  // sample pixels (step)
+  let r=0,g=0,b=0,count=0; const step=6;
+  for(let i=0;i<d.length;i+=4*step){ r+=d[i]; g+=d[i+1]; b+=d[i+2]; count++; }
+  r=Math.round(r/count); g=Math.round(g/count); b=Math.round(b/count);
+  // compute HSV for heuristics
+  const hsv = rgbToHsv(r,g,b);
+  rgbText.innerText = `R ${r} • G ${g} • B ${b}`;
+  hsvText.innerText = `H ${Math.round(hsv[0])}° • S ${Math.round(hsv[1]*100)}% • V ${Math.round(hsv[2]*100)}%`;
+  // ML classification using prototypes
+  const seedKey = seedSelect.value || 'custom';
+  const proto = (SEED_PROTOTYPES[seedKey]) ? SEED_PROTOTYPES[seedKey] : SEED_PROTOTYPES.custom;
+  const dDry = colorDistance([r,g,b], proto.dry);
+  const dIdeal = colorDistance([r,g,b], proto.ideal);
+  const dWet = colorDistance([r,g,b], proto.wet);
+  // find min
+  const min = Math.min(dDry,dIdeal,dWet);
+  let zone = 'unknown';
+  if(min === dDry) zone='dry';
+  else if(min === dIdeal) zone='ideal';
+  else zone='wet';
+  // score: closeness to ideal, scaled
+  let score = Math.round(Math.max(5, Math.min(98, 100 - (dIdeal/2))));
+  // adjust by zone
+  if(zone === 'dry') score = Math.round(score * 0.5);
+  if(zone === 'wet') score = Math.round(score * 0.6);
+  // confidence metric
+  const conf = Math.round(Math.max(25, 100 - Math.min(dDry,dIdeal,dWet)/2));
+  // create report
+  const report = { seed: seedKey, sampleRgb:[r,g,b], hsv, zone, score, conf, ts:(new Date()).toISOString() };
+  lastReport = report;
+  displayResults(report);
+  // play beep then voice (male tone)
+  beep(720,160);
+  setTimeout(()=> {
+    // localized message
+    const lang = langSelect.value;
+    const dict = STR[lang] || STR.en;
+    if(zone==='dry') speakText(dict.tooDryAdvice);
+    else if(zone==='ideal') speakText(dict.idealAdvice);
+    else if(zone==='wet') speakText(dict.tooWetAdvice);
+  }, 320);
+});
+
+/* --------- Display results --------- */
+function displayResults(rpt){
+  const lang = langSelect.value;
+  const dict = STR[lang] || STR.en;
+  // status badge
+  statusBadge.innerHTML = '';
+  const span = document.createElement('span'); span.className='badge';
+  if(rpt.zone==='dry'){ span.classList.add('status-low'); span.innerText = dict.tooDryTitle; }
+  else if(rpt.zone==='ideal'){ span.classList.add('status-opt'); span.innerText = dict.idealTitle; }
+  else if(rpt.zone==='wet'){ span.classList.add('status-high'); span.innerText = dict.tooWetTitle; }
+  else { span.innerText = dict.unknown; }
+  statusBadge.appendChild(span);
+
+  detectedState.innerText = (seedSelect.value==='custom' ? (customName.value || 'Custom') : seedSelect.options[seedSelect.selecte
