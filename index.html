@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Smart Seed — Moisture Analyzer (22 languages)</title>
+<style>
+  :root{
+    --bg:#f4f7f6; --card:#fff; --accent:#166f3a; --muted:#42514a; --danger:#c63c3c;
+    --good:#178a45;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,Arial,sans-serif;background:var(--bg);color:var(--muted)}
+  .wrap{max-width:1100px;margin:14px auto;padding:14px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .brand{display:flex;gap:12px;align-items:center}
+  .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#6ecb88);display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:20px}
+  h1{margin:0;font-size:18px;color:var(--accent)}
+  .subtitle{font-size:13px;color:var(--muted)}
+  .grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:14px}
+  @media(min-width:980px){.grid{grid-template-columns:1fr 380px}}
+  .card{background:var(--card);border-radius:12px;padding:14px;box-shadow:0 10px 28px rgba(2,6,23,0.06)}
+  .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  select,input,button{padding:10px 12px;border-radius:10px;border:1px solid #e6eef0;background:transparent;font-size:14px}
+  button.primary{background:var(--accent);color:#fff;border:none;cursor:pointer}
+  button.ghost{background:transparent;border:1px dashed #dfeaea;cursor:pointer}
+  .video-frame{position:relative;border-radius:10px;overflow:hidden;background:#000;height:340px}
+  video{width:100%;height:100%;display:block;object-fit:cover}
+  .guide{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:110px;height:110px;border-radius:50%;border:3px dashed rgba(255,255,255,0.9);pointer-events:none}
+  .preview{display:flex;gap:12px;align-items:center;margin-top:10px}
+  .swatch{width:68px;height:68px;border-radius:12px;border:1px solid #e9f1ee;box-shadow:inset 0 2px 6px rgba(255,255,255,0.6)}
+  .metrics{font-size:13px;color:var(--muted)}
+  .meter{height:20px;background:#eef9ee;border-radius:12px;overflow:hidden;margin-top:8px;border:1px solid rgba(0,0,0,0.03)}
+  .meter-fill{height:100%;width:0%;background:linear-gradient(90deg,#ff8fa0,#ff5b5b);transition:width 900ms cubic-bezier(.2,.9,.2,1)}
+  .badge{display:inline-block;padding:8px 12px;border-radius:999px;font-weight:700}
+  .status-low{background:#fff5f5;color:var(--danger);border:1px solid #f7d6d6}
+  .status-opt{background:#f3fff6;color:var(--good);border:1px solid #d4efd4}
+  .status-high{background:#f2f8ff;color:#0b62a3;border:1px solid #d8e9fb}
+  .small{font-size:13px;color:var(--muted)}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .history{max-height:220px;overflow:auto;margin-top:8px}
+  .hist-item{padding:8px;border-radius:8px;border:1px solid #eef6f1;margin-bottom:8px;background:linear-gradient(180deg,rgba(255,255,255,0.6),transparent)}
+  footer{font-size:13px;color:var(--muted);text-align:center;margin-top:12px}
+  .legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .legend .item{display:flex;gap:8px;align-items:center}
+  .colorbox{width:20px;height:20px;border-radius:4px;border:1px solid rgba(0,0,0,0.06)}
+  .note{font-size:13px;color:var(--muted);margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo">SS</div>
+      <div>
+        <h1>Smart Seed — Moisture Analyzer</h1>
+        <div class="subtitle small">Rear-camera color check • Multilingual • Farmer report</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <select id="langSelect" title="Language"></select>
+      <button id="enableAudio" class="ghost">Enable Audio</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- Left: camera + controls -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex;gap:10px;align-items:center">
+          <label class="small">Seed</label>
+          <select id="seedSelect">
+            <!-- 20 seeds + custom -->
+            <option value="paddy">Paddy (Rice)</option><option value="wheat">Wheat</option><option value="ragi">Ragi</option>
+            <option value="green_gram">Green Gram</option><option value="black_gram">Black Gram</option><option value="bengal_gram">Bengal Gram</option>
+            <option value="maize">Maize</option><option value="coconut">Coconut</option><option value="groundnut">Groundnut</option>
+            <option value="sesame">Sesame</option><option value="mustard">Mustard</option><option value="sorghum">Sorghum</option>
+            <option value="foxtail">Foxtail</option><option value="barnyard">Barnyard</option><option value="little_millet">Little Millet</option>
+            <option value="pearl_millet">Pearl Millet</option><option value="soybean">Soybean</option><option value="sunflower">Sunflower</option>
+            <option value="cotton">Cotton</option><option value="custom">Custom (calibrate)</option>
+          </select>
+          <input id="customName" placeholder="Custom name" style="display:none" />
+        </div>
+
+        <div style="display:flex;gap:8px">
+          <button id="openCam" class="primary">Open Rear Camera</button>
+          <button id="scanBtn" class="primary">📸 Scan Now</button>
+          <button id="resetBtn" class="ghost">Reset</button>
+        </div>
+      </div>
+
+      <div style="margin-top:12px" class="video-wrap">
+        <div class="video-frame">
+          <video id="video" playsinline autoplay muted></video>
+          <div class="guide" aria-hidden="true"></div>
+        </div>
+
+        <div class="preview">
+          <div id="swatch" class="swatch"></div>
+          <div>
+            <div id="rgbText" class="metrics">R - G - B</div>
+            <div id="hsvText" class="metrics small"></div>
+          </div>
+        </div>
+
+        <div class="legend">
+          <div class="item"><div class="colorbox" style="background:purple"></div><div class="small">Too Dry (Purple/Violet)</div></div>
+          <div class="item"><div class="colorbox" style="background:pink"></div><div class="small">Ideal (Pink/Light Red)</div></div>
+          <div class="item"><div class="colorbox" style="background:green"></div><div class="small">Too Wet (Green)</div></div>
+          <div class="item"><div class="colorbox" style="background:blue"></div><div class="small">Very Wet (Blue)</div></div>
+        </div>
+
+        <div class="note small">Tip: include a small white patch near the strip to improve color accuracy.</div>
+      </div>
+
+      <div style="margin-top:12px" class="actions">
+        <button id="calibrateBtn" class="ghost">Calibrate Ideal</button>
+        <button id="downloadBtn" class="ghost">Download Report</button>
+      </div>
+    </div>
+
+    <!-- Right: Results & history -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div class="small">Detected</div>
+          <div id="detectedState" style="font-weight:800;font-size:18px">No sample</div>
+        </div>
+        <div style="text-align:right">
+          <div class="small">Confidence</div>
+          <div id="confidence" style="font-weight:800">--%</div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <div class="small">Moisture status</div>
+        <div id="statusBadgeWrap" style="margin-top:8px"><span id="statusBadge" class="badge status-opt">--</span></div>
+
+        <div style="margin-top:14px" class="small">Germination estimate</div>
+        <div class="meter"><div id="meterFill" class="meter-fill" style="width:0%"></div></div>
+        <div id="scoreText" style="margin-top:8px;font-weight:700">-- / 100</div>
+
+        <div id="adviceText" class="small" style="margin-top:10px;color:var(--muted)">Capture the packet color strip to get farmer-friendly advice.</div>
+
+        <div style="margin-top:12px">
+          <button id="saveBtn" class="primary">Save to history</button>
+          <button id="speakBtn" class="ghost">🔊 Voice</button>
+        </div>
+
+        <div style="margin-top:12px">
+          <div class="small">History</div>
+          <div id="historyList" class="history"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Made for YIP • Works on mobile — allow camera & audio permissions</footer>
+</div>
+
+<script>
+/* ------------------- 22 LANGUAGES: UI & STATUS STRINGS -------------------
+   For each language code (22 official), provide translations for:
+   - tip / openCameraErr / audioEnabled / tooDryTitle / tooDryDesc /
+   idealTitle / idealDesc / tooWetTitle / tooWetDesc / unknownTitle /
+   saved / noReport / downloadLabel / calibrateLabel, etc.
+   We'll provide full strings for English (en), Malayalam (ml), Hindi (hi)
+   and status strings for the other scheduled languages (translated).
+*/
+const LANGS = [
+  {code:'en',name:'English'},
+  {code:'ml',name:'Malayalam'},
+  {code:'hi',name:'Hindi'},
+  {code:'as',name:'Assamese'},
+  {code:'bn',name:'Bengali'},
+  {code:'brx',name:'Bodo'},
+  {code:'doi',name:'Dogri'},
+  {code:'gu',name:'Gujarati'},
+  {code:'kn',name:'Kannada'},
+  {code:'ks',name:'Kashmiri'},
+  {code:'kok',name:'Konkani'},
+  {code:'mai',name:'Maithili'},
+  {code:'mni',name:'Manipuri'},
+  {code:'mr',name:'Marathi'},
+  {code:'ne',name:'Nepali'},
+  {code:'od',name:'Odia'},
+  {code:'pa',name:'Punjabi'},
+  {code:'sa',name:'Sanskrit'},
+  {code:'sat',name:'Santali'},
+  {code:'sd',name:'Sindhi'},
+  {code:'ta',name:'Tamil'},
+  {code:'te',name:'Telugu'}
+];
+
+const STRINGS = {
+  en:{
+    tip:'Place a small white patch near the strip for consistent reading.',
+    openCameraErr:'Cannot open camera. Allow permission and try again.',
+    audioEnabled:'Audio enabled',
+    tooDryTitle:'Too Dry — BAD',
+    tooDryDesc:'Very low moisture. Seeds may lose germination — moistening advised.',
+    idealTitle:'Ideal Moisture — GOOD',
+    idealDesc:'Perfect moisture for storage and best germination.',
+    tooWetTitle:'Too Wet — BAD',
+    tooWetDesc:'High moisture — fungus risk and quality loss. Dry before storage.',
+    unknownTitle:'Unknown — try better lighting',
+    saved:'Saved to history',
+    noReport:'No reading to download',
+    download:'Download Report',
+    calibrate:'Calibrate Ideal'
+  },
+  ml:{
+    tip:'സ്ട്രിപ്പ് അടുത്ത് ഒരു ചെറു വെളുത്ത പാച്ച് വെക്കുക.',
+    openCameraErr:'ക്യാമറ തുറക്കാൻ സാധിച്ചില്ല. അനുമതികള്‍ പ്രവർത്തിക്കുന്നുവെന്ന് പരിശോധിക്കുക.',
+    audioEnabled:'ഓഡിയോ പ്രവർത്തിക്കുന്നു',
+    tooDryTitle:'വളരെ വരണ്ടത് — മോശം',
+    tooDryDesc:'വളരെ കുറവ് ഈർപ്പം. വിത്തുകളുടെ മുളച്ചുവരൽ കുറയാം — നന്നായി ഈർപ്പം നൽകുക.',
+    idealTitle:'ഉത്തമ ഈർപ്പ് — നല്ലത്',
+    idealDesc:'സംഭരണത്തിനും മികച്ച മുളച്ചുവരലിനും അനുയോജ്യം.',
+    tooWetTitle:'വളരെ ഈർപ്പം — മോശം',
+    tooWetDesc:'ഏറ്റവും കൂടുതൽ ഈർപ്പം — ഫംഗസ് സാധ്യത, ഗുണനിലവാര നഷ്ടം. ഉണക്കുക.',
+    unknownTitle:'അസ്പഷ്ടം — മികച്ച പ്രകാശത്തിൽ ശ്രമിക്കുക',
+    saved:'ചരിത്രത്തിൽ സംരക്ഷിച്ചു',
+    noReport:'ഡൗൺലോഡ് ചെയ്യാനുള്ള റീഡിംഗ് ഇല്ല',
+    download:'റിപ്പോർട്ട് ഡൗൺലോഡ്',
+    calibrate:'ആദർശ calibrate ചെയ്യുക'
+  },
+  hi:{
+    tip:'इंडिकेटर स्ट्रिप के पास एक छोटा सफेद पैच रखें।',
+    openCameraErr:'कैमरा खोलने में समस्या। अनुमति दें और पुनः प्रयास करें।',
+    audioEnabled:'ऑडियो सक्षम है',
+    tooDryTitle:'बहुत सूखा — खराब',
+    tooDryDesc:'नमी बहुत कम। बीजों की अंकुरण क्षमता कम हो सकती है — हल्की नमी दें।',
+    idealTitle:'उत्तम नमी — अच्छा',
+    idealDesc:'भंडारण और अंकुरण के लिए उपयुक्त नमी।',
+    tooWetTitle:'बहुत गीला — खराब',
+    tooWetDesc:'अधिक नमी — फफूंदी का खतरा और गुणवत्ता हानि। पहले सुखाएँ।',
+    unknownTitle:'अस्पष्ट — बेहतर प्रकाश में स्कैन करें',
+    saved:'इतिहास में सहेजा गया',
+    noReport:'डाउनलोड के लिए कोई रीडिंग नहीं',
+    download:'रिपोर्ट डाउनलोड',
+    calibrate:'आदर्श कैलिब्रेट करें'
+  },
+  /* For other scheduled languages we include translated status strings.
+     (These are concise status translations.) */
+  as:{ tooDryTitle:'অতি শুকান — ক্ষতিকারক', tooDryDesc:'বীজের আর্দ্রতা খুবই কম। গুণমান হ্রাসের সম্ভাবনা।', idealTitle:'উপযুক্ত আর্দ্রতা — ভাল', idealDesc:'সংরক্ষণ ও বপনের জন্য উপযুক্ত।', tooWetTitle:'অতি ভিজা — ক্ষতিকারক', tooWetDesc:'ছাঁচের ঝুঁকি, গুণমান হ্রাস।', unknownTitle:'অজানা'},
+  bn:{ tooDryTitle:'অতিশয় শুকনো — ক্ষতিগ্রস্ত', tooDryDesc:'বীজের আর্দ্রতা খুব কম। গুণমান হ্রাস হতে পারে।', idealTitle:'আদর্শ আর্দ্রতা — ভাল', idealDesc:'সংরক্ষণ এবং বপনের জন্য অনুকূল।', tooWetTitle:'অতিভেজা — বিপদজনক', tooWetDesc:'ছত্রাকের ঝুঁকি ও গুণগত হ্রাস।', unknownTitle:'অজানা'},
+  brx:{ tooDryTitle:'बाडो सूखाय — खराब', tooDryDesc:'बियागो नमी कम। मोल कमी आहै।', idealTitle:'सही नमी — बढ़िया', idealDesc:'भंडारण आर बोवाईर लेल बढ़िया।', tooWetTitle:'अधिक गीलो — जोखिम', tooWetDesc:'फंगस खतरा, गुणवत्ता घटेते।', unknownTitle:'अज्ञात'},
+  doi:{ tooDryTitle:'बहुत सूखा — खराब', tooDryDesc:'बीज की नमी बहुत कम है। गुण घट सकते हैं।', idealTitle:'उत्तम नमी — अच्छा', idealDesc:'संग्रह और बुवाई के लिए अच्छा।', tooWetTitle:'बहुत गीला — खतरा', tooWetDesc:'फफूंदी तथा गुणवत्ता हानि।', unknownTitle:'अस्पष्ट'},
+  gu:{ tooDryTitle:'ખૂબ સૂકું — ખરાબ', tooDryDesc:'બીજની ભેજ ખૂબ ઓછા છે. ગુણવત્તા ઘટી શકે છે.', idealTitle:'આદર્શ ભેજ — સારો', idealDesc:'સંગ્રહ અને વાવણી માટે અનુકૂળ.', tooWetTitle:'ખૂબ ભીણ — જોખમ', tooWetDesc:'ફૂગનો ખતરો, ગુણવત્તા ખતમ.', unknownTitle:'અજ્ઞાત'},
+  kn:{ tooDryTitle:'ತೀವ್ರ ಒಣ — ಬದು', tooDryDesc:'ಬೀಜದ ತೇವಾಂಶ ತುಂಬಾ ಕಡಿಮೆ. ಗುಣಮಟ್ಟ ಕಟ್ಟಿ ಹೋಗಬಹುದು.', idealTitle:'ಉತ್ತಮ ತೇವ — ಉತ್ತಮ', idealDesc:'ಸಂಗ್ರಹ ಮತ್ತು ಬಿತ್ತನೆಗೆ ಸೂಕ್ತ.', tooWetTitle:'ತೀವ್ರ ತೇವ — ಅಪಾಯ', tooWetDesc:'ಫಂಗಸ್ ಸಂಭವನೀಯತೆ, ಗುಣಮಟ್ಟ ಕೆಡಬಹುದು.', unknownTitle:'ಅಸ್ಪಷ್ಟ'},
+  ks:{ tooDryTitle:'بہت خشک — خراب', tooDryDesc:'بیج کی نمی بہت کم۔ کوالٹی کم ہوسکتی ہے۔', idealTitle:'مناسب نمی — اچھا', idealDesc:'ذخیرہ اور بوائی کے لئے بہتر۔', tooWetTitle:'بہت گیلا — خطرہ', tooWetDesc:'فنگس کا خطرہ، کوالٹی کم.', unknownTitle:'نامعلوم'},
+  kok:{ tooDryTitle:'फार सुकां — वाईट', tooDryDesc:'बीजाची ओलावा खूप कमी. गुणवारी कमी होवक शकत.', idealTitle:'योग्य ओलावा — चांगलं', idealDesc:'साठवण व पेरणीसाठी योग्य.', tooWetTitle:'फार ओला — धोका', tooWetDesc:'फुगीची शक्यता, गुणवत्ता कमी.', unknownTitle:'अज्ञात'},
+  mai:{ tooDryTitle:'बहुत सुखल — खराब', tooDryDesc:'बीजक नमी बहुत कम अछि। गुणवत्ता घटि सकैत अछि।', idealTitle:'उत्तम नमी — नीक', idealDesc:'संग्रह आ रोपनी ल\' उपयुक्त।', tooWetTitle:'बहुत भीजल — खतरा', tooWetDesc:'फफूंदीक खतरा, गुण घटि सकैत अछि।', unknownTitle:'अज्ञात'},
+  mni:{ tooDryTitle:'ꯑꯣꯡꯅꯥ ꯇꯣꯡ — ꯁꯤꯖ ꯀꯨꯔꯕ', tooDryDesc:'ꯁꯤꯖ-gi ꯇꯨꯔꯁꯤ ꯚꯥꯈꯤ ꯇꯣꯡ', idealTitle:'ꯑꯣꯡꯅꯥ ꯃꯤꯡꯁꯥꯡ — ꯃꯥꯡꯁꯤ', idealDesc:'ꯁꯤꯖ-gi ꯁꯣꯡꯗꯥ ꯊꯠꯅꯥ', tooWetTitle:'ꯑꯣꯡꯅꯥ ꯑꯃꯁꯤ — ꯑꯈꯣꯛꯄꯤ', tooWetDesc:'ꯑꯈꯣꯛꯄꯤ ꯑꯦꯂꯥ ꯍꯥꯛꯄ', unknownTitle:'ꯂꯥꯣꯛꯄ'},
+  mr:{ tooDryTitle:'खूप सुकलेले — वाईट', tooDryDesc:'बियाण्याची ओलावा खूप कमी. गुणवत्तेत घट होऊ शकते.', idealTitle:'योग्य ओलावा — चांगले', idealDesc:'साठवण आणि पेरणीसाठी योग्य.', tooWetTitle:'जास्त ओले — धोका', tooWetDesc:'बुरशीचा धोका आणि गुणवत्ता हानी.', unknownTitle:'अस्पष्ट'},
+  ne:{ tooDryTitle:'धेरै सुक्खा — खराब', tooDryDesc:'बिउको नमी घटेको छ। गुणस्तर घट्न सक्छ।', idealTitle:'उचित आर्द्रता — राम्रो', idealDesc:'भण्डारण र रोपाइँका लागि राम्रो।', tooWetTitle:'धेरै भिजेको — खतरा', tooWetDesc:'छाला / फफूंदको खतरा, गुणस्तर घट्छ।', unknownTitle:'अज्ञात'},
+  od:{ tooDryTitle:'ବହୁତ ସୁକା — ଖରାପ', tooDryDesc:'ବିଜର ଆର୍ଦ୍ରତା ଖୁବ କମ୍। ଗୁଣମାନ କମିପାରେ।', idealTitle:'ଉତ୍ତମ ଆର୍ଦ୍ରତା — ୟୋଗ୍ୟ', idealDesc:'ସଞ୍ଚୟ ଓ ପ୍ରତିରୋପଣ ପାଇଁ ଭଲ।', tooWetTitle:'ଅତି ପିଆସା — ଝୁକି', tooWetDesc:'ଫଙ୍ଗସ୍‌ ଝୁକି, ଗୁଣମାନ କମେ।', unknownTitle:'ଅଜଣା'},
+  pa:{ tooDryTitle:'ਬਹੁਤ ਸੁੱਕਾ — ਖਰਾਬ', tooDryDesc:'ਬੀਜ ਦੀ ਨਮੀ ਬਹੁਤ ਘੱਟ ਹੈ। ਗੁਣਵੱਤਾ ਘੱਟ ਹੋ ਸਕਦੀ ਹੈ।', idealTitle:'ਉੱਚੀ ਨਮੀ — ਚੰਗਾ', idealDesc:'ਸਟੋਰੇਜ ਅਤੇ ਬੂੰਦ ਲਈ ਉਚਿਤ।', tooWetTitle:'ਬਹੁਤ ਗੀਲਾ — ਖ਼ਤਰਾ', tooWetDesc:'ਫ਼ੰਗਸ ਦਾ ਖ਼ਤਰਾ, ਗੁਣਵੱਤਾ ਘਟਦੀ ਹੈ।', unknownTitle:'ਅਣਜਾਣਿਆ'},
+  sa:{ tooDryTitle:'अतिशुष्कम् — दूषणम्', tooDryDesc:'बीजानां आद्रता अतीन्यूनः। गुणे ह्रासः स्यात्।', idealTitle:'उत्तमा आद्रता — उत्तम', idealDesc:'संग्रहाय च रोपणाय उपयुक्तम्।', tooWetTitle:'अतिओदक — जोखिम', tooWetDesc:'कालकः जोखिमः, गुणः ह्रासः।', unknownTitle:'अज्ञातः'},
+  sat:{ tooDryTitle:'ᱵᱟᱨ ᱛᱟᱦᱟ — ᱥᱟᱦᱟᱱ', tooDryDesc:'ᱵᱤᱡᱟ ᱮᱛᱟ ᱠᱚᱱ ᱵᱚᱨᱜ', idealTitle:'ᱟᱢᱟ ᱠᱚᱱ — ᱵᱟᱞᱟ', idealDesc:'ᱵᱤᱡᱟ ᱠᱚᱱ ᱠᱚᱱ ᱵᱚᱨᱜ', tooWetTitle:'ᱵᱟᱨ ᱯᱤᱡᱟ — ᱠᱚᱱ', tooWetDesc:'ᱯᱷᱟᱱ ᱠᱚᱱ ᱵᱤᱡᱟ ᱠᱟᱦᱟᱹ', unknownTitle:'ᱟᱹᱜᱟᱛ'},
+  sd:{ tooDryTitle:'تمام ٿُل — خراب', tooDryDesc:'ٻج جي نمي گھٽ آهي. معيار متاثر ٿي سگهي ٿو.', idealTitle:'مناسب نمي — سٺو', idealDesc:'ذخيرو ۽ پوک لاءِ مناسب.', tooWetTitle:'تمام گهڻو گندو — خطرو', tooWetDesc:'ڦڦونھ جو خدشو، معيار گھٽجي ٿو.', unknownTitle:'نامعلوم'},
+  ta:{ tooDryTitle:'மிகச் சாகடைந்தது — தீமை', tooDryDesc:'மக்கான ஈரப்பதம் மிகக் குறைவு. விதிகளின் வளர்ச்சி பாதிக்கலாம்.', idealTitle:'உத்தம ஈரப்பதம் — நல்லது', idealDesc:'சமர்ப்பிக்கும் மற்றும் விதைநாகம் சிறந்தது.', tooWetTitle:'மிக அதிக ஈரப்பதம் — ஆபத்து', tooWetDesc:'புழுக் காய்ச்சி வாய்ப்பு, தரம் குறைவு.', unknownTitle:'தெரியவில்லை'},
+  te:{ tooDryTitle:'చాలా ఎండిపోయింది — చెత్త', tooDryDesc:'కురుపు తేమ తక్కువ. విత్తన శక్తి తగ్గవచ్చు.', idealTitle:'ఆదర్శ తేమ — మంచిది', idealDesc:'సంగ్రహం మరియు సాగు కోసం మంచి.', tooWetTitle:'చాలా తడి — ప్రమాదం', tooWetDesc:'పట్టు/పొడుచు ప్రమాదం, నాణ్యత తగ్గు.', unknownTitle:'తెలియదు'}
+};
+
+/* Populate language selector */
+const langSel = document.getElementById('langSelect');
+LANGS.forEach(l=>{ const o=document.createElement('option'); o.value=l.code; o.textContent=l.name; langSel.appendChild(o); });
+langSel.value='en';
+
+/* DOM refs */
+const enableAudioBtn = document.getElementById('enableAudio');
+const openCamBtn = document.getElementById('openCam');
+const scanBtn = document.getElementById('scanBtn');
+const resetBtn = document.getElementById('resetBtn');
+const calibrateBtn = document.getElementById('calibrateBtn');
+const downloadBtn = document.getElementById('downloadBtn');
+
+const videoEl = document.getElementById('video');
+const swatchEl = document.getElementById('swatch');
+const rgbText = document.getElementById('rgbText');
+const hsvText = document.getElementById('hsvText');
+
+const detectedState = document.getElementById('detectedState');
+const confEl = document.getElementById('confidence');
+const statusBadge = document.getElementById('statusBadge');
+const meterFill = document.getElementById('meterFill');
+const scoreText = document.getElementById('scoreText');
+const adviceText = document.getElementById('adviceText');
+
+const seedSelect = document.getElementById('seedSelect');
+const customName = document.getElementById('customName');
+const saveBtn = document.getElementById('saveBtn');
+const speakBtn = document.getElementById('speakBtn');
+const historyList = document.getElementById('historyList');
+
+let stream = null;
+let audioCtx = null;
+let lastReport = null;
+
+/* ---------------- Audio unlock ---------------- */
+enableAudioBtn.addEventListener('click', ()=>{
+  try{
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    // tiny beep to indicate enabled
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.frequency.value = 880; o.type='sine'; o.connect(g); g.connect(audioCtx.destination);
+    g.gain.setValueAtTime(0.0001, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.2, audioCtx.currentTime+0.01);
+    o.start(); setTimeout(()=>{ g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime+0.02); o.stop(audioCtx.currentTime+0.03); }, 120);
+    enableAudioBtn.textContent = STRINGS[langSel.value].audioEnabled || STRINGS.en.audioEnabled;
+  }catch(e){ console.warn('audio unlock', e); }
+});
+
+/* ---------- choose rear device helper ---------- */
+async function chooseRearDeviceId(){
+  try{
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const videoInputs = devices.filter(d=>d.kind==='videoinput');
+    // prefer labels with back/rear/environment
+    for(const d of videoInputs){
+      const lab = (d.label||'').toLowerCase();
+      if(/back|rear|environment|camera 0|camera1|rear camera/.test(lab)) return d.de
